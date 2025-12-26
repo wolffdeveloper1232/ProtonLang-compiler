@@ -28,18 +28,33 @@ def _in(string):
 
 # if you want to get stuff from the table, use gettable(table, index)
 code = """
-table: mytable {
-
-    "bean"   ;
-    "cheese"  ;
-
-    "hello";
+# Create a table of fruits
+table: fruits {
+    "apple";
+    "banana";
+    "cherry";
+    "date";
+    "elderberry";
 }
-var:counter=0;
+
+# Counter for looping through the table
+var:counter=1;
+
 loop {
+    out(gettable(fruits, counter))
+    
+    same counter 5 {
+        stop:
+    }
+    
     inc: counter;
-    out(gettable(mytable, counter))
-    same 3 counter {
+}
+
+# Print a final message
+
+loop {
+    same 3 3 {
+        out("All fruits printed!")
         stop:
     }
 }
@@ -52,7 +67,7 @@ codepy = """def gettable(table, index):
 depth = 0
 
 def setup():
-    global var, varset, same, same2, instring, dec, inc, table, table2
+    global var, varset, same, same2, instring, dec, inc, table, table2, comment
     var = False
     varset = False
     same = False
@@ -62,12 +77,14 @@ def setup():
     inc = False
     table = False
     table2 = False
+    comment = False # this one is not used for a segment.
 
 setup()
 counter = 0
 for line in code.split("\n"):
     line = line.strip()
     # setup()
+    comment = False
     if line == '':
         continue
 
@@ -87,6 +104,9 @@ for line in code.split("\n"):
         token += char
         if char == '"':
             instring = not instring
+        elif char == "#" and not instring:
+            comment = True
+            break
             
         # if its a var
         if var:
@@ -220,7 +240,8 @@ for line in code.split("\n"):
             token = ""
             table = True
             
-    codepy += "\n"
+    if not comment:
+        codepy += "\n"
     if var:
         raise Exception("Error: used var keyword without a var after")
     if same or same2:
