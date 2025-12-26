@@ -26,24 +26,33 @@ def _in(string):
 
     return "input()"
 
+# if you want to get stuff from the table, use gettable(table, index)
 code = """
-var: user = in: ;
-var: counter = 0 ;
-loop{
-    out(user)
+table: mytable {
+
+    "bean"   ;
+    "cheese"  ;
+
+    "hello";
+}
+var:counter=0;
+loop {
     inc: counter;
-    same counter 5 {
+    out(gettable(mytable, counter))
+    same 3 counter {
         stop:
     }
 }
-
 """
-codepy = ""
+
+codepy = """def gettable(table, index):
+ return eval(f"table.e{index}")
+"""
 
 depth = 0
 
 def setup():
-    global var, varset, same, same2, instring, dec, inc
+    global var, varset, same, same2, instring, dec, inc, table, table2
     var = False
     varset = False
     same = False
@@ -51,12 +60,20 @@ def setup():
     instring = False # this one is not used for a segment, but rather to make sure the () does not break
     dec = False
     inc = False
+    table = False
+    table2 = False
 
+setup()
+counter = 0
 for line in code.split("\n"):
     line = line.strip()
-    setup()
+    # setup()
     if line == '':
         continue
+
+    if table2:
+        counter += 1
+            
     token = ""
 
     depth -= count_nostr(line, "}")
@@ -76,7 +93,7 @@ for line in code.split("\n"):
             if token.endswith(" "):
                 token = token[0:len(token)-1]
             if ( token.endswith("=") or token.endswith(";") ) and len(token) > token.count(" "):
-                codepy += token.strip().replace(";","")
+                codepy += token.replace(";","").strip()
                 if token.endswith("="):
                     varset = True
                 
@@ -110,18 +127,20 @@ for line in code.split("\n"):
             if token == " ":
                 token = ""
             if ( token.endswith(" ") or token.endswith("{") ) and not instring:
-                codepy += token.strip().replace("{","")+":"
+                codepy += token.replace("{","").strip()+":"
                 token = ""
                 same2 = False
+            continue
 
         # if dec
         if dec:
             if token == " ":
                 token == ""
             if ( token.endswith(" ") or token.endswith(";") ) and len(token) > token.count(" "):
-                codepy += token.strip().replace(";","") + "-=1"
+                codepy += token.replace(";","").strip() + "-=1"
                 token == ""
                 dec = False
+            continue
 
         # if inc
         if inc:
@@ -131,6 +150,36 @@ for line in code.split("\n"):
                 codepy += token.strip().replace(";","") + "+=1"
                 token == ""
                 inc = False
+            continue
+
+        # if its a table
+        if table:
+            if token == " ":
+                token = ""
+            token = token.strip()
+            if ( token.endswith(" ") or token.endswith("{") ) and len(token) > token.count(" "):
+                codepy += f'class {token.replace("{","")}:'
+                tablename = token.replace("{","")
+                codepy += "\n def __init__(self):"
+                token = ""
+                table = False
+                table2 = True
+            continue
+
+        # second part
+        if table2:
+            if line == '':
+                continue
+            if token == " ":
+                token == ""
+            if token.endswith(";") and len(token) > token.count(" "):
+                codepy += f" self.e{str(counter)}=" + token.replace(";","").strip()
+            if char == "}":
+                codepy += f"{tablename} = {tablename}()"
+                counter = 0
+                table2 = False
+            continue
+            
             
         # normal stuff:
         if token == "}":
@@ -140,7 +189,7 @@ for line in code.split("\n"):
         elif token.strip() == "out":
             codepy += "print"
             token = ""
-        elif token.replace(" ","").startswith('(') and token.endswith(')') and not instring:
+        elif token.replace(" ","").startswith('(') and token.endswith(')') and (not instring) and count_nostr(token, "(") == count_nostr(token, ")"):
             codepy += token.strip()
             token = ""
         elif token == "var:":
@@ -150,7 +199,7 @@ for line in code.split("\n"):
             same = True
             token = ""
             codepy += "if "
-        elif token == " ":
+        elif token == " " and not instring:
             token = ""
         elif token == "else " or token == "else{":
             token = ""
@@ -167,6 +216,9 @@ for line in code.split("\n"):
         elif token == "inc:":
             token = ""
             inc = True
+        elif token == "table:":
+            token = ""
+            table = True
             
     codepy += "\n"
     if var:
@@ -176,4 +228,4 @@ for line in code.split("\n"):
     if instring:
         raise Exception("Error: you didnt complete the string. FINISH IT.")
     
-print(codepy) # use exec for testing purposes 
+print(codepy) # using exec for testing purposes 
