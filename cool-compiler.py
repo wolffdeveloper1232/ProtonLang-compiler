@@ -8,14 +8,14 @@ def count_nostr(string, thing):
         
         out = 0
         
-        for i in string:
-            if i == '"':
+        for i in range(len(string)):
+            if string[i:i+len(thing)] == '"':
                 instring = not instring
 
             if instring:
                 continue
 
-            if i == thing:
+            if string[i:i+len(thing)] == thing:
                 out += 1
 
         return out
@@ -28,46 +28,25 @@ def _in(string):
 
 # if you want to get stuff from the table, use gettable(table, index)
 code = """
-# Create a table of fruits
-table: fruits {
-    "apple";
-    "banana";
-    "cherry";
-    "date";
-    "elderberry";
+var: user = in: ;
+table: stuff {
+    user;
 }
-
-# Counter for looping through the table
-var:counter=1;
-
-loop {
-    out(gettable(fruits, counter))
-    
-    same counter 5 {
-        stop:
-    }
-    
-    inc: counter;
-}
-
-# Print a final message
-
-loop {
-    same 3 3 {
-        out("All fruits printed!")
-        stop:
-    }
-}
+out(gettable(stuff, 1))
 """
 
-codepy = """def gettable(table, index):
+codepy = ""
+
+# make functions for things i dont feel like compiling only if needed:
+if count_nostr(code, "table:"):
+    codepy += """def gettable(table, index):
  return eval(f"table.e{index}")
 """
 
 depth = 0
 
 def setup():
-    global var, varset, same, same2, instring, dec, inc, table, table2, comment
+    global var, varset, same, same2, instring, dec, inc, table, comment
     var = False
     varset = False
     same = False
@@ -76,10 +55,10 @@ def setup():
     dec = False
     inc = False
     table = False
-    table2 = False
     comment = False # this one is not used for a segment.
 
 setup()
+table2 = False
 counter = 0
 for line in code.split("\n"):
     line = line.strip()
@@ -242,6 +221,8 @@ for line in code.split("\n"):
             
     if not comment:
         codepy += "\n"
+    else:
+        setup()
     if var:
         raise Exception("Error: used var keyword without a var after")
     if same or same2:
