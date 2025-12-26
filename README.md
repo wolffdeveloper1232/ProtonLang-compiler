@@ -1,4 +1,4 @@
-proglang is a transpiled language that is turing complete.
+proglang is a transpiled language that is turing complete. below is all of the basics. i will probably not change this anymore unless i feel i have to.
 commands:
 out() -> print()
 same a b { ... } -> if a==b:
