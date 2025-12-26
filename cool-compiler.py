@@ -176,4 +176,4 @@ for line in code.split("\n"):
     if instring:
         raise Exception("Error: you didnt complete the string. FINISH IT.")
     
-print(codepy) # using exec for testing purposes 
+print(codepy) # use exec for testing purposes 
