@@ -24,3 +24,5 @@ dec: counter;
 to decrease.
 
 there is a already made example program that you can transpile into python.
+
+replace the code var with your in code inside of the code for the compiler. then use python3 to run it. then copy and paste the output into a different .py file, and run that file. thats how you make your own code.
