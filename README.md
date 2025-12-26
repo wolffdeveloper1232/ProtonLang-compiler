@@ -22,3 +22,5 @@ inc: counter;
 to increase or do:
 dec: counter;
 to decrease.
+
+there is a already made example program that you can transpile into python.
