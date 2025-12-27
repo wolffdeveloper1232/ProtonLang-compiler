@@ -28,11 +28,23 @@ def _in(string):
 
 # if you want to get stuff from the table, use gettable(table, index)
 code = """
-var: user = in: ;
-table: stuff {
-    user;
+table: cheese {
+    "chedder";
+    "swiss";
+    "american"; # not tasty cheese
 }
-out(gettable(stuff, 1))
+python:
+if True:
+    print("cheese:")
+end;
+var: c = 0;
+loop {
+    inc: c;
+    out(gettable(cheese, c))
+    same c 3 {
+        stop:
+    }
+}
 """
 
 codepy = ""
@@ -46,22 +58,24 @@ if count_nostr(code, "table:"):
 depth = 0
 
 def setup():
-    global var, varset, same, same2, instring, dec, inc, table, comment
+    global var, varset, same, same2, instring, dec, inc, table, comment, python
     var = False
     varset = False
     same = False
     same2 = False # second part of same
     instring = False # this one is not used for a segment, but rather to make sure the () does not break
     dec = False
-    inc = False
+    inc = False; # semicolon be like
     table = False
     comment = False # this one is not used for a segment.
+    python = False # i like eating pizza
 
 setup()
 table2 = False
 counter = 0
 for line in code.split("\n"):
-    line = line.strip()
+    if not python:
+        line = line.strip()
     # setup()
     comment = False
     if line == '':
@@ -177,8 +191,15 @@ for line in code.split("\n"):
                 codepy += f"{tablename} = {tablename}()"
                 counter = 0
                 table2 = False
+            continue            
+
+        # funny snake
+        if python:
+            if line.startswith("end;"):
+                python = False
+            else:
+                codepy += char
             continue
-            
             
         # normal stuff:
         if token == "}":
@@ -218,8 +239,11 @@ for line in code.split("\n"):
         elif token == "table:":
             token = ""
             table = True
+        elif token == "python:":
+            python = True
+            token = ""
             
-    if not comment:
+    if not line.startswith("#"): # comments on the same line as code should also have a \n appended. so this is not a bug, ok?
         codepy += "\n"
     else:
         setup()
@@ -230,4 +254,4 @@ for line in code.split("\n"):
     if instring:
         raise Exception("Error: you didnt complete the string. FINISH IT.")
     
-print(codepy) # using exec for testing purposes 
+exec(codepy) # use exec for testing purposes 
